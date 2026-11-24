@@ -183,10 +183,11 @@
     const avatar = $("#user-avatar"); avatar.replaceChildren();
     if (user?.photoURL && /^https:\/\//.test(user.photoURL)) { const img = document.createElement("img"); img.src = user.photoURL; img.alt = ""; img.referrerPolicy = "no-referrer"; avatar.append(img); }
     else avatar.textContent = (user?.displayName || "D").slice(0, 1);
-    $("#local-mode-note").hidden = !!user || state.view === "assistant";
+    $("#header-account").textContent = user ? "我的帳號" : "Google 登入";
+    $("#account-title").textContent = user ? "我的帳號" : "登入 Daylight";
     $("#connection-title").textContent = user ? state.cloudError ? "雲端連線待處理" : state.ready ? "已連接 Firestore" : "正在讀取雲端" : "本機體驗模式";
     $("#connection-detail").textContent = user ? state.saving ? "正在儲存變更…" : "此帳號的私人資料空間" : "資料保存在此瀏覽器";
-    $("#account-status").textContent = user ? `已登入：${user.displayName || user.email || "Google 使用者"}` : cloud ? "Firebase 已連接。登入後即可使用雲端資料庫。" : "尚未連接 Firebase。建立自己的 Firebase 專案，填入 config.js 後即可使用 Google 登入。";
+    $("#account-status").textContent = user ? `已登入：${user.displayName || user.email || "Google 使用者"}` : cloud ? "登入後即可在不同裝置同步你的行程與待辦。" : "目前無法使用 Google 登入。請稍後再試。";
     $("#google-login").hidden = !!user; $("#google-logout").hidden = !user;
     $("#settings-status").textContent = user ? `目前空間：${user.displayName || "Google 帳號"}。${state.cloudError || (state.ready ? "Firestore 已連接。" : "正在載入…")}` : "目前使用本機空間，資料僅保存在此瀏覽器，不會自動上傳。";
     $("#import-local").hidden = !user || !localItems.length;
