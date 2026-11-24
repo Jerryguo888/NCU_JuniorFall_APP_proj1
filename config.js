@@ -12,7 +12,11 @@ window.DAYLIGHT_CONFIG = Object.freeze({
   },
   functionsRegion: "asia-east1",
   aiBackendEnabled: false,
-  aiLogic: null,
+  aiLogic: {
+    host: "jerryguo888.github.io",
+    siteKey: "6LfSmjAuAAAAAExN6Ill3epERhUjx0EcgFebruAu",
+    model: "gemini-3.5-flash-lite"
+  },
   appCheckSiteKey: "",
   useEmulators: false
 });

@@ -191,7 +191,7 @@
     $("#google-login").hidden = !!user; $("#google-logout").hidden = !user;
     $("#settings-status").textContent = user ? `目前空間：${user.displayName || "Google 帳號"}。${state.cloudError || (state.ready ? "Firestore 已連接。" : "正在載入…")}` : "目前使用本機空間，資料僅保存在此瀏覽器，不會自動上傳。";
     $("#import-local").hidden = !user || !localItems.length;
-    $("#ai-mode-label").textContent = usesCloudPlanner() ? "Gemini 規劃" : "本機規劃 · 未連線 Gemini";
+    $("#ai-mode-label").textContent = usesCloudPlanner() ? "Gemini 規劃" : cloud?.plan ? "登入後使用 Gemini" : "本機規劃 · 未連線 Gemini";
     $("#ai-disclaimer").textContent = usesCloudPlanner()
       ? cloud.plannerDisclosure
       : "本機規劃只支援安排待辦、檢查衝突及整理本週重點。";
