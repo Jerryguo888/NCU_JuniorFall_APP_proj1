@@ -31,7 +31,7 @@
   const LOCAL_KEY = "daylight.local.v1";
   let localItems = [], toastTimer, cloud = null, stopSnapshot = null, generation = 0;
   let pickerMonth;
-  const usesCloudPlanner = () => Boolean(state.user && cloud && window.DAYLIGHT_CONFIG?.aiBackendEnabled);
+  const usesCloudPlanner = () => Boolean(state.user && cloud?.plan);
   const state = { items: [], date: C.dateKey(), month: C.dateKey().slice(0, 7), view: "day", dayFilter: "pending", taskFilter: "all", sort: "date", search: "", user: null, ready: true, saving: false, aiBusy: false, messages: [], suggestions: [], cloudError: "", authBusy: false };
   function banner(message) { $("#status-banner").textContent = message; $("#status-banner").hidden = !message; }
   function toast(message) { clearTimeout(toastTimer); $("#toast").textContent = message; $("#toast").hidden = false; toastTimer = setTimeout(() => { $("#toast").hidden = true; }, 4500); }
@@ -192,7 +192,7 @@
     $("#import-local").hidden = !user || !localItems.length;
     $("#ai-mode-label").textContent = usesCloudPlanner() ? "Gemini 規劃" : "本機規劃 · 未連線 Gemini";
     $("#ai-disclaimer").textContent = usesCloudPlanner()
-      ? "傳送時會將相關行程與待辦提供給 Gemini。請確認建議後再加入行程。"
+      ? cloud.plannerDisclosure
       : "本機規劃只支援安排待辦、檢查衝突及整理本週重點。";
   }
   function messageHTML(message) {
@@ -327,7 +327,7 @@
     log.scrollTop = log.scrollHeight;
     try {
       let result;
-      if (useGemini) result = await cloud.plan({ prompt: text, date });
+      if (useGemini) result = await cloud.plan({ prompt: text, date }, state.items);
       else { await new Promise(resolve => setTimeout(resolve, 250)); result = C.localPlan(state.items, date, text); }
       if (requestGeneration !== generation) return;
       if (!result || typeof result.summary !== "string" || !Array.isArray(result.suggestions)) throw new Error("規劃回覆格式不正確，請重試。");
@@ -471,8 +471,18 @@
         login: () => authSDK.signInWithPopup(auth, new authSDK.GoogleAuthProvider()), logout: () => authSDK.signOut(auth),
         saveMany: async (uid, items) => { if (items.length > 400) throw new Error("單次最多 400 筆事項。"); const batch = dbSDK.writeBatch(db); items.forEach(item => batch.set(dbSDK.doc(collection(uid), item.id), { ...item, updatedAt: Date.now() })); await batch.commit(); },
         removeMany: async (uid, ids) => { const batch = dbSDK.writeBatch(db); ids.forEach(id => batch.delete(dbSDK.doc(collection(uid), id))); await batch.commit(); },
-        plan: async data => (await fnSDK.httpsCallable(functions, "planDay", { timeout: 60000 })(data)).data
+        plan: config.aiBackendEnabled
+          ? async data => (await fnSDK.httpsCallable(functions, "planDay", { timeout: 60000 })(data)).data
+          : null,
+        plannerDisclosure: "傳送時會將相關行程與待辦提供給 Gemini。請確認建議後再加入行程。"
       };
+      if (!config.aiBackendEnabled && config.aiLogic?.siteKey && config.aiLogic.host === location.hostname) {
+        window.DaylightFirebaseAI.create({ base, app, config: config.aiLogic, C }).then(plan => {
+          cloud.plan = plan;
+          cloud.plannerDisclosure = "Gemini 會收到你輸入的訊息、忙碌時段及待辦優先順序。請避免輸入私人資料。";
+          renderAccount();
+        }).catch(error => console.warn("Gemini setup failed:", error.code || error.name));
+      }
       authSDK.onAuthStateChanged(auth, user => {
         generation++; const current = generation;
         if (stopSnapshot) { stopSnapshot(); stopSnapshot = null; }

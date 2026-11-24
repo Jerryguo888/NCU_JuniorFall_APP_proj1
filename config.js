@@ -12,6 +12,7 @@ window.DAYLIGHT_CONFIG = Object.freeze({
   },
   functionsRegion: "asia-east1",
   aiBackendEnabled: false,
+  aiLogic: null,
   appCheckSiteKey: "",
   useEmulators: false
 });
