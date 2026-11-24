@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#167568">
+  <meta name="description" content="Daylight 日常有序，專為學生打造的行程與任務管理工具。安排生活、專注重要的事。">
+  <title>Daylight 日常有序 | 我的行程</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./config.js"></script>
+  <script defer src="./src/core.js"></script>
+  <script defer src="./src/app.js"></script>
+</head>
+<body>
+  <a href="#main" class="skip-link">跳至主要內容</a>
+  <aside class="sidebar" aria-label="側邊導覽">
+    <a class="brand" href="#day" aria-label="Daylight 首頁"><img src="./favicon.svg" width="38" height="38" alt=""><span>daylight<span class="brand-sub">日常有序</span></span></a>
+    <div class="workspace-label">YOUR PERSONAL SPACE</div>
+    <nav class="main-nav" aria-label="主要導覽">
+      <button type="button" data-view="day"><span data-icon="sun"></span><span>我的一天</span></button>
+      <button type="button" data-view="week"><span data-icon="calendar"></span><span>本週總覽</span></button>
+      <button type="button" data-view="tasks"><span data-icon="checklist"></span><span>所有任務</span><span id="nav-task-count" class="nav-count">0</span></button>
+      <button type="button" data-view="assistant"><span data-icon="sparkles"></span><span>AI 規劃室</span><span class="tiny-tag">AI</span></button>
+    </nav>
+    <section class="mini-calendar" aria-label="月曆">
+      <div class="mini-calendar-head"><strong id="mini-month"></strong><div class="button-pair"><button type="button" class="icon-button small" data-action="prev-month" aria-label="上個月"><span data-icon="chevron-left"></span></button><button type="button" class="icon-button small" data-action="next-month" aria-label="下個月"><span data-icon="chevron-right"></span></button></div></div>
+      <div class="calendar-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      <div id="mini-days" class="calendar-days"></div>
+    </section>
+    <div class="sidebar-note"><span data-icon="leaf"></span><p>不用填滿每一刻。<br><strong>為生活留一點空白。</strong></p></div>
+    <div class="sidebar-bottom">
+      <button type="button" class="connection-button" data-action="settings"><span data-icon="cloud"></span><span><strong id="connection-title">本機體驗模式</strong><small id="connection-detail">資料保存在此瀏覽器</small></span><span data-icon="settings"></span></button>
+      <button type="button" class="account-button" data-action="account"><span class="avatar" id="user-avatar">D</span><span><strong id="user-name">我的個人空間</strong><small id="user-caption">登入後開啟雲端同步</small></span><span data-icon="chevron-right"></span></button>
+    </div>
+  </aside>
+
+  <main id="main" tabindex="-1">
+    <header class="topbar">
+      <div class="breadcrumb"><span class="mobile-brand">daylight</span><span class="desktop-breadcrumb">我的空間 <span class="breadcrumb-divider">/</span> <strong id="view-name">我的一天</strong></span></div>
+      <div class="topbar-actions"><label class="search-box"><span data-icon="search"></span><input id="global-search" type="search" placeholder="搜尋行程與任務" aria-label="搜尋行程與任務"><kbd>/</kbd></label><button type="button" class="icon-button" data-action="settings" aria-label="設定與資料管理"><span data-icon="settings"></span></button><button type="button" class="primary-button" data-action="new-event"><span data-icon="plus"></span><span>新增事項</span></button></div>
+    </header>
+    <div id="status-banner" class="status-banner" role="status" hidden></div>
+    <div class="page-content">
+      <section class="page-heading"><div><p class="eyebrow" id="heading-eyebrow">MAKE ROOM FOR WHAT MATTERS</p><h1 id="page-title">把時間，留給重要的事。</h1><p id="page-subtitle">一點安排，讓每一天從容一點。</p></div><div class="heading-date"><span data-icon="calendar"></span><span id="full-date"></span></div></section>
+      <div class="local-mode-note" id="local-mode-note"><span data-icon="info"></span><span>目前使用本機體驗模式，示範資料可自由編輯。</span><button type="button" class="text-button" data-action="account">連接 Google 帳號</button></div>
+
+      <section id="day-view" class="view-panel">
+        <div class="day-overview">
+          <section class="card month-calendar" aria-label="選擇日期">
+            <header class="month-calendar-head">
+              <h2 id="day-month" aria-live="polite"></h2>
+              <div class="month-controls">
+                <button type="button" class="outline-button" data-action="today">今天</button>
+                <button type="button" class="icon-button" data-action="prev-month" aria-label="上個月"><span data-icon="chevron-left"></span></button>
+                <button type="button" class="icon-button" data-action="next-month" aria-label="下個月"><span data-icon="chevron-right"></span></button>
+              </div>
+            </header>
+            <div class="month-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+            <div id="day-month-days" class="month-days" role="group" aria-label="本月日期"></div>
+            <p class="month-legend">有行程或任務</p>
+          </section>
+          <section class="day-summary" aria-labelledby="selected-date-title">
+            <h2 id="selected-date-title" aria-live="polite"></h2>
+            <div class="stats-grid" id="day-stats"></div>
+          </section>
+        </div>
+        <div class="dashboard-columns">
+          <section class="card agenda-card"><div class="section-head"><div><h2>當日行程 <span class="counter" id="event-count">0</span></h2><p>把生活裡的大事、小事，放在心上。</p></div><button type="button" class="icon-button" data-action="new-event" aria-label="新增行程"><span data-icon="plus"></span></button></div><div id="agenda-list" class="agenda-list"></div><button type="button" class="add-inline" data-action="new-event"><span data-icon="plus"></span>為這一天新增行程</button></section>
+          <div class="right-column"><section class="card tasks-card"><div class="section-head"><div><h2>待辦清單 <span class="counter" id="task-count">0</span></h2><p>一次完成一件，就是進步。</p></div><button type="button" class="icon-button" data-action="new-task" aria-label="新增任務"><span data-icon="plus"></span></button></div><div class="task-filter tabs" role="group" aria-label="任務狀態"><button type="button" data-day-filter="pending" aria-pressed="true">待完成</button><button type="button" data-day-filter="done" aria-pressed="false">已完成</button></div><div id="today-tasks" class="task-list"></div><button type="button" class="add-inline" data-action="new-task"><span data-icon="plus"></span>新增一個小目標</button></section>
+          <section class="assistant-teaser"><div class="teaser-icon"><span data-icon="sparkles"></span></div><span class="eyebrow">A LITTLE HELP, A BETTER DAY</span><h2>今天，想先從哪裡開始？</h2><p>讓規劃小幫手陪你整理待辦，<br>找到適合自己的生活節奏。</p><button type="button" class="outline-button" data-view="assistant"><span data-icon="sparkles"></span>一起規劃今天</button><div class="teaser-art" aria-hidden="true"><span></span><span></span><span></span></div></section></div>
+        </div>
+      </section>
+
+      <section id="week-view" class="view-panel" hidden><div class="date-toolbar"><div><h2 id="week-range-title"></h2><p class="muted">看見整週的安排，也記得留白。</p></div><div class="date-controls"><button type="button" class="outline-button compact" data-action="today">本週</button><button type="button" class="icon-button" data-action="prev-week" aria-label="上一週"><span data-icon="chevron-left"></span></button><button type="button" class="icon-button" data-action="next-week" aria-label="下一週"><span data-icon="chevron-right"></span></button></div></div><div class="week-board" id="week-board"></div></section>
+
+      <section id="tasks-view" class="view-panel" hidden><div class="card"><div class="section-head"><div><h2>每個小目標，都算數。</h2><p id="all-task-summary"></p></div><button type="button" class="primary-button" data-action="new-task"><span data-icon="plus"></span>新增任務</button></div><div class="all-task-toolbar"><div class="tabs" role="group" aria-label="篩選任務狀態"><button type="button" data-task-filter="all" aria-pressed="true">全部</button><button type="button" data-task-filter="pending" aria-pressed="false">待完成</button><button type="button" data-task-filter="done" aria-pressed="false">已完成</button></div><label class="select-label">排序<select id="task-sort"><option value="date">到期日</option><option value="priority">優先順序</option></select></label></div><div id="all-tasks" class="task-list full-task-list"></div></div></section>
+
+      <section id="assistant-view" class="view-panel" hidden>
+        <div class="card ai-chat">
+          <header class="ai-chat-header">
+            <div class="ai-chat-identity">
+              <span class="chat-avatar chat-avatar-main" data-icon="sparkles"></span>
+              <div>
+                <h1>規劃小幫手</h1>
+                <p id="ai-mode-label">本機規劃 · 未連線 Gemini</p>
+              </div>
+            </div>
+            <div class="ai-chat-controls">
+              <button type="button" id="ai-date-button" class="outline-button" data-action="open-date-picker" aria-haspopup="dialog" aria-controls="date-picker" aria-label="選擇規劃日期">
+                <span data-icon="calendar"></span><span id="ai-date-label"></span>
+              </button>
+              <button type="button" id="ai-clear" class="icon-button" data-action="clear-chat" aria-label="清除對話" title="清除對話"><span data-icon="trash"></span></button>
+            </div>
+          </header>
+          <div class="ai-messages" id="ai-messages" role="log" aria-label="規劃對話" tabindex="0"></div>
+          <footer class="ai-compose">
+            <div class="prompt-chips" aria-label="快速提問">
+              <button type="button" data-prompt="幫我把待辦排進當天的空檔，每件預留 30 分鐘">安排待辦</button>
+              <button type="button" data-prompt="幫我找出當天的行程衝突，並給我建議">檢查衝突</button>
+              <button type="button" data-prompt="幫我整理所選日期這一週還沒完成的重要任務">整理本週重點</button>
+            </div>
+            <form id="ai-form" class="ai-form">
+              <label for="ai-input" class="sr-only">輸入訊息</label>
+              <textarea id="ai-input" rows="2" maxlength="2000" placeholder="輸入訊息…" required></textarea>
+              <button type="submit" class="primary-button" id="ai-send" aria-label="傳送訊息"><span data-icon="send"></span></button>
+            </form>
+            <p class="ai-disclaimer" id="ai-disclaimer"></p>
+          </footer>
+        </div>
+      </section>
+      <footer class="page-footer"><span>daylight <span class="footer-separator">·</span> 把日子，過成喜歡的樣子。</span><button type="button" class="text-button" data-action="settings">資料與設定</button></footer>
+    </div>
+  </main>
+
+  <dialog id="date-picker" class="date-picker" aria-labelledby="date-picker-title">
+    <header class="date-picker-header">
+      <h2 id="date-picker-title">選擇規劃日期</h2>
+      <button type="button" class="icon-button" data-close="date-picker" aria-label="關閉日期選擇"><span data-icon="x"></span></button>
+    </header>
+    <div class="month-calendar">
+      <div class="month-calendar-head">
+        <h3 id="picker-month" aria-live="polite"></h3>
+        <div class="month-controls">
+          <button type="button" class="outline-button" data-action="picker-today">今天</button>
+          <button type="button" class="icon-button" data-action="picker-prev-month" aria-label="上個月"><span data-icon="chevron-left"></span></button>
+          <button type="button" class="icon-button" data-action="picker-next-month" aria-label="下個月"><span data-icon="chevron-right"></span></button>
+        </div>
+      </div>
+      <div class="month-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      <div id="picker-month-days" class="month-days" role="group" aria-label="本月日期"></div>
+      <p class="month-legend">有行程或任務</p>
+    </div>
+  </dialog>
+
+  <dialog id="item-dialog" class="modal"><form id="item-form"><header class="modal-head"><div><span class="eyebrow">ONE THING AT A TIME</span><h2 id="item-dialog-title">新增事項</h2></div><button type="button" class="icon-button" data-close="item-dialog" aria-label="關閉"><span data-icon="x"></span></button></header><div class="modal-body"><div class="tabs item-type-tabs" role="group" aria-label="事項類型"><button type="button" data-item-type="event" aria-pressed="true"><span data-icon="calendar"></span>行程</button><button type="button" data-item-type="task" aria-pressed="false"><span data-icon="checklist"></span>任務</button></div><input type="hidden" name="id"><input type="hidden" name="kind" value="event"><label class="field">名稱 <span class="required-label">必填</span><input name="title" maxlength="100" required placeholder="接下來，想做些什麼？" autocomplete="off"></label><div class="form-row"><label class="field">日期<input name="date" type="date" required></label><label class="field">分類<select name="category"><option value="study">學習</option><option value="work">工作</option><option value="life">生活</option><option value="personal">個人</option></select></label></div><div class="form-row event-fields"><label class="field">開始時間<input name="start" type="time" required value="09:00"></label><label class="field">結束時間<input name="end" type="time" required value="10:00"></label></div><label class="field event-fields">地點<input name="location" maxlength="120" placeholder="選填，例如：圖書館 2F"></label><label class="field task-fields" hidden>優先順序<select name="priority"><option value="medium">一般</option><option value="high">重要</option><option value="low">不急</option></select></label><label class="field">備註<textarea name="notes" rows="3" maxlength="1000" placeholder="選填，留一點提醒給自己。"></textarea></label><p id="form-error" class="form-error" role="alert" hidden></p><div id="conflict-warning" class="warning-note" role="status" hidden></div></div><footer class="modal-footer"><button type="button" class="danger-text" id="delete-item" hidden>刪除事項</button><span class="spacer"></span><button type="button" class="outline-button" data-close="item-dialog">取消</button><button type="submit" class="primary-button" id="save-item">儲存事項</button></footer></form></dialog>
+
+  <dialog id="account-dialog" class="modal narrow"><header class="modal-head"><h2>讓安排，跟著你走。</h2><button type="button" class="icon-button" data-close="account-dialog" aria-label="關閉"><span data-icon="x"></span></button></header><div class="modal-body"><div class="account-illustration" data-icon="cloud"></div><p class="account-description">使用 Google 登入，在不同裝置同步你的行程與任務。每個帳號有獨立的資料空間。</p><div id="account-status" class="info-note"></div><button type="button" class="google-button" id="google-login"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.9-1.75 2.98-4.32 2.98-7.36Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.24-2.51c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.77-5.61-4.15H3.04v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.39 13.89A6 6 0 0 1 6.07 12c0-.66.11-1.3.32-1.89V7.52H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.48l3.35-2.59Z"/><path fill="#EA4335" d="M12 5.96c1.47 0 2.79.51 3.82 1.51l2.86-2.86A9.59 9.59 0 0 0 12 2a10 10 0 0 0-8.96 5.52l3.35 2.59C7.18 7.73 9.39 5.96 12 5.96Z"/></svg>使用 Google 登入</button><button type="button" class="outline-button full-width" id="google-logout" hidden>登出 Google 帳號</button><p class="fine-print">本機資料不會自動上傳。登入後可在「資料與設定」選擇匯入。</p><p id="auth-error" class="form-error" role="alert" hidden></p></div></dialog>
+
+  <dialog id="settings-dialog" class="modal"><header class="modal-head"><div><span class="eyebrow">YOUR SPACE, YOUR DATA</span><h2>資料與設定</h2></div><button type="button" class="icon-button" data-close="settings-dialog" aria-label="關閉"><span data-icon="x"></span></button></header><div class="modal-body"><div id="settings-status" class="info-note"></div><section class="settings-section"><h3>保留你的安排</h3><p>將目前資料下載為 JSON 備份，或從備份還原。還原採合併方式，相同編號會更新。</p><div class="settings-actions"><button type="button" class="outline-button" data-action="export"><span data-icon="download"></span>匯出備份</button><label class="outline-button file-button"><span data-icon="upload"></span>匯入備份<input id="import-file" type="file" accept=".json,application/json"></label></div><button type="button" id="import-local" class="outline-button full-width" hidden>將這台裝置的本機資料匯入雲端</button></section><section class="settings-section"><h3>從空白開始</h3><p>移除目前空間中標記為示範的資料。你自己新增的內容會保留。</p><button type="button" class="outline-button" data-action="remove-demo">移除示範資料</button></section><section class="settings-section"><h3>雲端連線</h3><p>Google 登入與 Firestore 需要設定 Firebase Web App。Gemini 規劃功能透過 Firebase Cloud Functions 呼叫。</p><button type="button" class="outline-button" data-action="account">管理 Google 帳號</button><p class="fine-print">API Key 安全地保存在後端 Secret Manager。此網頁僅使用可公開的 Firebase Web 設定。</p></section></div></dialog>
+
+  <dialog id="confirm-dialog" class="modal narrow"><div class="modal-body"><h2 id="confirm-title">確認操作</h2><p id="confirm-message"></p><div class="confirm-actions"><button type="button" class="outline-button" id="confirm-cancel">取消</button><button type="button" class="primary-button" id="confirm-ok">確認</button></div></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript><div class="noscript">請啟用 JavaScript，以使用行程與任務管理功能。</div></noscript>
+</body>
+</html>
